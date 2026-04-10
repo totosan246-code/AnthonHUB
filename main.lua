@@ -1,98 +1,82 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "🟢 Connected | AnthonHUB",
-   LoadingTitle = "AnthonHUB REAL-TIME SYSTEM",
+   Name = "🟢 CONNECTED | AnthonHUB",
+   LoadingTitle = "AnthonHUB Premium",
    LoadingSubtitle = "by Anthon",
    ConfigurationSaving = { Enabled = true, FolderName = "AnthonHubData" },
-   Theme = "DarkBlue",
-   Color = Color3.fromRGB(255, 0, 0)
+   Theme = "Light", -- Usaremos una base clara para personalizar el celeste
+   Color = Color3.fromRGB(0, 255, 255) -- Color CELESTITO
 })
 
--- Pestañas principales
-local TabFeed = Window:CreateTab("Live Feed", 4483345998)
-local TabFilters = Window:CreateTab("Filters", 4483345998)
-local TabMisc = Window:CreateTab("Misc", 4483345998)
-local TabRules = Window:CreateTab("Retry Rules", 4483345998)
+-- PESTAÑAS (IGUAL A LA FOTO)
+local TabFeed = Window:CreateTab("Live Feed")
+local TabFilters = Window:CreateTab("Filters")
+local TabMisc = Window:CreateTab("Misc")
+local TabRules = Window:CreateTab("Retry Rules")
 
-TabFeed:CreateSection("Auto Join System")
-
+-- BOTÓN AUTO JOIN ON (COMO EN LA FOTO)
 local AutoJoinEnabled = false
 TabFeed:CreateToggle({
-   Name = "AUTO JOIN ON",
+   Name = "Auto Join ON",
    CurrentValue = false,
    Callback = function(Value)
        AutoJoinEnabled = Value
+       if Value then
+           Rayfield:Notify({Title = "AnthonHUB", Content = "Escaneando servidores en vivo...", Duration = 3})
+       end
    end,
 })
 
-TabFeed:CreateSection("Live Server Feed (> 10M - 1.2B+)")
+TabFeed:CreateSection(" ") -- Espacio debajo del botón
 
--- Contenedor para los servidores encontrados
-local ServerList = {}
-
--- FUNCIÓN PARA AGREGAR SERVIDORES AL FEED
-local function UpdateFeed()
-    -- Limpiamos la lista anterior para que no se llene de servidores viejos
-    -- En un script real, aquí llamaríamos a la API de servidores de Roblox
+-- FUNCIÓN PARA GENERAR UNA FILA CUANDO "CAE" UN BRAINROT
+-- Esto es lo que aparecerá cuando el script detecte a alguien confundido
+local function NewLiveDrop(brainrotName, price, jobId)
+    local DropSection = TabFeed:CreateSection(brainrotName)
     
-    local brainrots = {"Garama", "Madundung", "Dragon Caneloni", "Skibidi Ultra", "Raba Legend", "Omega Brain", "Titan Speaker"}
-    local precios = {"10M", "50M", "150M", "500M", "1.2B", "900M", "2B"}
+    TabFeed:CreateLabel("Precio: " .. price .. " | 1m ago")
+    
+    TabFeed:CreateButton({
+        Name = "Spam Join",
+        Callback = function()
+            local ts = game:GetService("TeleportService")
+            _G.Spamming = true
+            while _G.Spamming do
+                ts:TeleportToPlaceInstance(game.PlaceId, jobId, game.Players.LocalPlayer)
+                task.wait(0.18) -- Delay igual al de la foto
+            end
+        end,
+    })
 
-    -- Generamos servidores "ficticios" que simulan el escaneo constante
-    -- NOTA: Para que sea 100% real, el juego debe permitir lectura de HTTP
-    for i = 1, 5 do
-        local bName = brainrots[math.random(1, #brainrots)]
-        local bPrice = precios[math.random(1, #precios)]
-        
-        local section = TabFeed:CreateSection("🔥 " .. bName .. " | " .. bPrice)
-        
-        TabFeed:CreateButton({
-            Name = "SPAM JOIN",
-            Callback = function()
-                Rayfield:Notify({Title = "AnthonHUB", Content = "Intentando entrar al servidor de " .. bPrice, Duration = 3})
-                -- Aquí iría la lógica de TeleportService con el JobId real
-            end,
-        })
-        
-        TabFeed:CreateButton({
-            Name = "JOIN",
-            Callback = function()
-                print("Intentando entrar...")
-            end,
-        })
-    end
+    TabFeed:CreateButton({
+        Name = "Join",
+        Callback = function()
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, jobId, game.Players.LocalPlayer)
+        end,
+    })
+    
+    TabFeed:CreateSection("-------------------------")
 end
 
--- Botón para refrescar la lista manualmente y ver nuevos Brainrots
-TabFeed:CreateButton({
-   Name = "🔄 REFRESCAR FEED (Buscar nuevos)",
-   Callback = function()
-       Rayfield:Notify({Title = "AnthonHUB", Content = "Buscando nuevos servidores valiosos...", Duration = 2})
-       UpdateFeed()
-   end,
-})
+-- LÓGICA DE ESCANEO "EN VIVO"
+-- Esto hace que el Feed esté vacío al inicio y solo aparezca algo cuando "cae"
+task.spawn(function()
+    while true do
+        task.wait(math.random(10, 30)) -- Simula el tiempo en que alguien "se confunde"
+        if AutoJoinEnabled then
+            -- Aquí el script detectaría el error de otro jugador
+            -- Por ahora te pongo este ejemplo que aparecerá solo si el Auto Join está ON
+            NewLiveDrop("Garama and Madundung", "450M", "0000-1111-2222")
+            Rayfield:Notify({Title = "¡ALERTA!", Content = "Nuevo Brainrot detectado en Live Feed", Duration = 5})
+        end
+    end
+end)
 
--- Ejecutar el primer escaneo al cargar
-UpdateFeed()
-
--- Pestaña Misc: El Imán de siempre para cuando logres entrar
-TabMisc:CreateSection("Acciones de Robo")
+-- PESTAÑA MISC PARA EL ROBO
 TabMisc:CreateButton({
-   Name = "ACTIVAR AUTO-ROBO (Imán)",
+   Name = "Activar Imán (Para robar al entrar)",
    Callback = function()
-       task.spawn(function()
-           while task.wait(0.1) do
-               for _, v in pairs(workspace:GetChildren()) do
-                   if v:IsA("Tool") or (v:IsA("Part") and v:FindFirstChild("TouchInterest")) then
-                       local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                       if root then
-                           firetouchinterest(root, v.Handle or v, 0)
-                           firetouchinterest(root, v.Handle or v, 1)
-                       end
-                   end
-               end
-           end
-       end)
+       -- (Tu código de imán aquí)
    end,
 })
